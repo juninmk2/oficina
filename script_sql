@@ -1,0 +1,224 @@
+create database oficina;
+show databases;
+use oficina;
+
+create table cliente(
+	idCliente int not null auto_increment primary key,
+    pnome varchar(15) not null,
+    sobrenome varchar(45) not null,
+    CPF varchar(11) not null,
+    CEP varchar(8) not null,
+    logradouro varchar(30) not null,
+    numero varchar(5) not null,
+    complemento varchar(15) null,
+    bairro varchar(15) null,
+    cidade varchar(30) not null,
+    uf char(2) not null,
+    email varchar(30) not null unique,
+    ddd char(2) not null,
+    telefone varchar(9) not null,
+    constraint cpf_cli_unique unique(CPF)
+);
+
+create table veiculo(
+	idVeiculo int auto_increment,
+    marca varchar(15),
+    modelo varchar(15),
+    ano char(4),
+    placa varchar(8) not null,
+    cor varchar(10) not null,
+    idCliente int,
+    primary key(idVeiculo, idCliente),
+    constraint fk_veiculo_cliente foreign key (idCliente) references cliente (idCliente)
+);
+
+create table equipe(
+	idEquipe int auto_increment primary key,
+    nome varchar(30) not null,
+    data_criacao date not null
+);
+
+create table mecanico(
+	idMecanico int auto_increment primary key,
+    nome varchar(45) not null,
+    CPF varchar(11) not null,
+    endereco varchar(45),
+    especialidade varchar(20) not null,
+    constraint unique_cpf_mecanico unique (CPF)
+);
+
+create table mecanico_pertence_equipe(
+	idMecanico int,
+    idEquipe int,
+    data_inclusao date not null,
+    situacao enum('Ativo', 'Suspenso', 'Encerrado') default 'Ativo',
+    primary key (idMecanico, idEquipe),
+    constraint fk_mecanico foreign key (idMecanico) references mecanico(idMecanico),
+    constraint fk_equipe foreign key (idEquipe) references equipe(idEquipe)
+);
+
+
+create table peca(
+	idPeca int not null auto_increment primary key,
+    descricao varchar(20) not null,
+    valor float not null default 0.0
+);
+
+create table servico(
+	idServico int not null auto_increment primary key,
+    descricao varchar(20) not null,
+    valor float not null default 0.0
+);
+
+create table ordem(
+	idOrdem int auto_increment,
+    data_emissao date not null,
+    data_entrega date not null,
+    idCliente int,
+    idVeiculo int,
+    idEquipe int,
+    primary key (idOrdem, idCliente, idVeiculo, idEquipe),
+    constraint fk_cliente_ordem foreign key (idCliente) references cliente (idCliente),
+    constraint fk_veiculo_ordem foreign key (idVeiculo) references veiculo (idVeiculo),
+    constraint fk_equipe_ordem foreign key (idEquipe) references equipe (idEquipe)
+);
+
+create table composta_de_pecas(
+	idPeca int,
+    idOrdem int,
+    primary key (idPeca, idOrdem),
+    constraint fk_ordem_peca foreign key (idPeca) references peca (idPeca),
+    constraint fk_peca_ordem foreign key (idOrdem) references ordem (idOrdem)
+);
+
+create table composta_de_servicos(
+	idServico int,
+    idOrdem int,
+    primary key (idServico, idOrdem),
+    constraint fk_ordem_servico foreign key (idServico) references servico (idServico),
+    constraint fk_servico_ordem foreign key (idOrdem) references ordem (idOrdem)
+);
+
+insert into cliente values
+(1, 'Osvaldo', 'Silva', '12345678910', '27273010', 'Av Tres', '55', 'CA', 'Retiro', 'Volta Redonda', 'RJ',
+'email1@gmail.com', '24', '999854787'),
+(2, 'Renato', 'Oliveira', '12375678910', '27273010', 'Av Um', '70', 'C1', 'Rosas', 'Barra mansa', 'RJ',
+'email2@gmail.com', '24', '999755787'),
+(3, 'Iris', 'de Souza', '45875678910', '27273010', 'Rua G', '110', null, 'Piquete', 'Barra mansa', 'RJ',
+'email3@gmail.com', '24', '999793187'),
+(4, 'Thais', 'Teixeira', '19963178910', '27273010', 'Rua São Pedro', '200', null, 'Rancho Alto', 'Quatis', 'RJ',
+'email4@gmail.com', '24', '982755780'),
+(5, 'Jocelino', 'Azevedo', '98724578910', '27273010', 'Av Alirante', '6581', 'C1', 'Siderlandia', 'Volta Redonda', 'RJ',
+'email5@gmail.com', '24', '999758871'),
+(6, 'Maria', 'de Lourdes', '15444782110', '27273010', 'Ruas das Magnolias', '192', 'AP 101', 'Vila Mury', 'Volta Redonda', 'RJ',
+'email6@gmail.com', '24', '988397412');
+
+insert into mecanico values
+(1, 'Romeu Augusto', '12347841210', 'Rua G, 12', 'Direção hdráulica'),
+(2, 'Afonso Custodio', '569874123811', 'Rua Um, 118', 'Retífica'),
+(3, 'Aristides Martins', '555896587845', 'Av Aflitos, 40', 'Cambio'),
+(4, 'Lindomar Knupp', '11322569874', 'Rua A, 1010', 'Alinhamento');
+
+insert into peca values
+(1, 'Filtro de ar', 110.40),
+(2, 'Óleo de motor', 33.50),
+(3, 'Reservatório de água', 49.99),
+(4, 'Amortecedor', 182.10),
+(5, 'Braço de suspensão', '68.60');
+
+insert into servico values
+(1, 'Troca de acessórios', 110.0),
+(2, 'Troca de óleo', 50.50),
+(3, 'Alinhamento', 120.0),
+(4, 'Troca de suspensão', 282.0),
+(5, 'Balanceamento', '10.60');
+
+insert into veiculo values
+(1, 'Fiat', 'Doblo Adventure', '2013', 'JKC-6401', 'Verde', 1),
+(2, 'Fiat', 'Siena', '2015', 'JKC-6408', 'Branco', 1),
+(3, 'Fiat', 'Punto', '2019', 'JKC-5401', 'Prata', 2),
+(4, 'Chevrolet', 'Onix', '2017', 'QNG-4B01', 'Chumbo', 3),
+(5, 'Chevrolet', 'Prisma', '2013', 'JKC-1233', 'Preto', 4),
+(6, 'Ford', 'Fiesta', '2020', 'KOK-6901', 'Branco', 5),
+(7, 'Volkswagem', 'Gol', '2018', 'JKC-5501', 'Prata', 6),
+(8, 'Volkswagem', 'Parati', '2022', 'JOA-6909', 'Branco', 3);
+
+insert into equipe values
+(1, 'Alfa', '2023-04-26'),
+(2, 'Beta', '2023-04-26'),
+(3, 'Gama', '2023-04-26'),
+(4, 'Omega', '2023-04-26'),
+(5, 'Sigma', '2023-04-26');
+
+insert into mecanico_pertence_equipe values
+(1, 1, '2023-04-26', 'Ativo'),
+(2, 1, '2023-04-26', 'Ativo'),
+(3, 1, '2023-04-26', 'Ativo'),
+(1, 2, '2023-04-26', 'Ativo'),
+(1, 3, '2023-04-26', 'Ativo'),
+(3, 4, '2023-04-26', 'Ativo'),
+(4, 4, '2023-04-26', 'Ativo'),
+(3, 5, '2023-04-26', 'Ativo'),
+(4, 5, '2023-04-26', 'Ativo');
+
+insert into ordem values
+(1, '2023-04-26', '2023-05-31', 1, 1, 5),
+(2, '2023-04-26', '2023-05-31', 2, 1, 5),
+(3, '2023-04-26', '2023-05-31', 6, 7, 1),
+(4, '2023-04-26', '2023-05-31', 2, 3, 2),
+(5, '2023-04-26', '2023-05-31', 3, 4, 4),
+(6, '2023-04-26', '2023-05-31', 4, 5, 1),
+(7, '2023-04-26', '2023-05-31', 5, 6, 3),
+(8, '2023-04-26', '2023-05-31', 6, 7, 1);
+
+insert into composta_de_pecas values
+(1, 1),
+(2, 1),
+(4, 2),
+(5, 2),
+(3, 3),
+(3, 4),
+(2, 5),
+(2, 6),
+(1, 7),
+(2, 7),
+(3, 7),
+(1, 8);
+
+insert into composta_de_servicos values
+(1, 1),
+(2, 1),
+(4, 2),
+(5, 2),
+(3, 3),
+(3, 4),
+(2, 5),
+(2, 6),
+(1, 7),
+(2, 7),
+(3, 7),
+(1, 8);
+
+-- exibir todos os dados de todos os clientes
+select * from cliente;
+
+-- exibir as informações ds veículos com ano de fabricação acima de 2015
+select * from veiculo where ano > 2015;
+
+-- gerando um atributo derivado que calcula o prazo total em dias e o prazo restante
+select idOrdem as Número, TIMESTAMPDIFF(DAY,data_emissao, data_entrega) as 'Prazo total', 
+TIMESTAMPDIFF(DAY, CURDATE(), data_entrega) as 'Prazo restante' from ordem;
+
+-- listando mecânicos por ordem alfabética
+select * from mecanico order by nome;
+
+-- Usando having para exibir clientes que possuem mais de 1 veículo cadastrado
+select concat(c.pnome, ' ', c.sobrenome) as Nome, v.idCliente as ID, count(*) as 'Quantidade' 
+from veiculo v, cliente c where c.idCliente=v.idCliente group by v.idCliente having Quantidade > 1;
+
+-- JOIN com 3 tabelas para listar o número da ordem de serviço, nome e CPF do cliente e os dados do veículo
+select o.idOrdem as ORDEM, concat(c.pnome, ' ', c.sobrenome) as CLIENTE, 
+c.CPF as CPF, v.marca as MARCA, v.modelo as MODELO, v.ano as ANO, 
+v.placa as PLACA from ordem o inner join cliente c on o.idCliente=c.idCliente
+inner join veiculo v on o.idVeiculo=v.idVeiculo order by o.idOrdem;
+
